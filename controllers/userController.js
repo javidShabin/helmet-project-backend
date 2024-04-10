@@ -173,8 +173,18 @@ const userLogin = async (req, res) => {
     res.status(404).json({ message: "faild to user login" });
   }
 };
+// Useres list
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(404).json({ message: "Server not responese..." });
+  }
+};
 module.exports = {
   userRegistration,
   verifyOtpAndCreateUser,
-  userLogin
+  userLogin,
+  getAllUsers,
 };
