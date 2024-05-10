@@ -78,65 +78,103 @@ const userRegistration = async (req, res) => {
 };
 // Otp verifying and create user
 const verifyOtpAndCreateUser = async (req, res) => {
-    try {
-      // Get emial and otp from req.body
-      const { email, otp } = req.body;
-      // Check if required fields are present
-      if (!email || !otp) {
-        return res.status(404).json({ message: "Email and OTP are required" });
-      }
-      // Find the temporary user by email
-      const tempUser = await TempUser.findOne({ email });
-  
-      if (!tempUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      // Check if OTP is correct and not expired
-      if (tempUser.otp !== otp) {
-        return res.status(400).json({ message: "Invalid OTP" });
-      }
-      if (tempUser.otpExpiresAt < Date.now()) {
-        return res.status(400).json({ message: "OTP has expired" });
-      }
-      // Create the actual user
-      const newUser = new User({
-        name: tempUser.name,
-        phone: tempUser.phone,
-        email: tempUser.email,
-        password: tempUser.password,
-      });
-  
-      await newUser.save();
-  
-      // Generate a token
-      const token = generateToken({
-        _id: newUser._id,
-        email: newUser.email,
-        role: "customer",
-      });
-      // Set token as cookie
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-      });
-  
-      // Remove the temporary user from the database after successful registration
-      await TempUser.deleteOne({ email });
-  
-      res.status(201).json({
-        success: true,
-        message: "User created successfully",
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
-        message: "OTP verification failed",
-        error: error.message,
-      });
+  try {
+    // Get emial and otp from req.body
+    const { email, otp } = req.body;
+    // Check if required fields are present
+    if (!email || !otp) {
+      return res.status(404).json({ message: "Email and OTP are required" });
     }
-  };
+    // Find the temporary user by email
+    const tempUser = await TempUser.findOne({ email });
 
+    if (!tempUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // Check if OTP is correct and not expired
+    if (tempUser.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+    if (tempUser.otpExpiresAt < Date.now()) {
+      return res.status(400).json({ message: "OTP has expired" });
+    }
+    // Create the actual user
+    const newUser = new User({
+      name: tempUser.name,
+      phone: tempUser.phone,
+      email: tempUser.email,
+      password: tempUser.password,
+    });
+
+    await newUser.save();
+
+    // Generate a token
+    const token = generateToken({
+      _id: newUser._id,
+      email: newUser.email,
+      role: "customer",
+    });
+    // Set token as cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
+    // Remove the temporary user from the database after successful registration
+    await TempUser.deleteOne({ email });
+
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "OTP verification failed",
+      error: error.message,
+    });
+  }
+};
+// Login user
+const userLogin = async (req, res) => {
+  try {
+    // Get datas from req.body
+    const { name, email, password } = req.body;
+    // Check if required fields are present
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    // Find the user using email
+    const isUserExist = await User.findOne({ email });
+
+    // If user not exist the response error
+    if (!isUserExist) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    // Compare the password of user
+    const passwordMatch = bcrypt.compareSync(password, isUserExist.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Unatherised access" });
+    }
+
+    // Generate token
+    const token = generateToken(isUserExist._id);
+    // Pass token as cookie the token will expire in one hour
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+    res.status(201).json({ success: true, message: "User logged in" });
+  } catch (error) {
+    res.status(404).json({ message: "faild to user login" });
+  }
+};
 module.exports = {
   userRegistration,
+  verifyOtpAndCreateUser,
+  userLogin
 };
