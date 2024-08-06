@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const { generateToken } = require("../utils/token");
 const { TempUser } = require("../models/tembUser");
+const { cloudinaryInstance } = require("../config/cloudinaryConfig");
 
 // Register user
 const userRegistration = async (req, res) => {
@@ -182,9 +183,23 @@ const getAllUsers = async (req, res) => {
     res.status(404).json({ message: "Server not responese..." });
   }
 };
+// Logout user
+const userLogOut = async (req, res) => {
+    try {
+      res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "none",
+      });
+      res.json({ success: true, message: "User logged out" });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 module.exports = {
   userRegistration,
   verifyOtpAndCreateUser,
   userLogin,
   getAllUsers,
+  userLogOut
 };
