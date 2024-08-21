@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const { TempUser } = require("../models/tembUser");
 const { cloudinaryInstance } = require("../config/cloudinaryConfig");
+const { generateToken } = require("../utils/token");
 
 
 // Register user
@@ -82,6 +83,7 @@ const verifyOtpAndCreateUser = async (req, res) => {
   try {
     // Get emial and otp from req.body
     const { email, otp } = req.body;
+
     // Check if required fields are present
     if (!email || !otp) {
       return res.status(404).json({ message: "Email and OTP are required" });

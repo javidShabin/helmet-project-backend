@@ -15,6 +15,6 @@ const tempUserSchema = new mongoose.Schema({
   role: { type: String, enum: ["customer", "admin"], default: "customer" },
 });
 
-const TempUser = mongoose.model("TempUser", tempUserSchema);
+const TempUser = mongoose.model("tempUser", tempUserSchema);
 
 module.exports = { TempUser };
