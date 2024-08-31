@@ -41,7 +41,35 @@ const adminregister = async (req, res) => {
 // Login admin
 const adminLogin = async (req, res) => {
   try {
-  } catch (error) {}
+    // destructuring fields
+    const { email, password } = req.body;
+    // check if required fields are present
+    if ((!email, !password)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
+    }
+    // check the admin signed or not
+    const isadminExist = await Admin.findOne({ email });
+    if (!isadminExist) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Admin does not exist" });
+    }
+    // compare password for login
+    const passwordMatch = bcrypt.compareSync(password, isadminExist.password);
+    if (!passwordMatch) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unatherised access" });
+    }
+    // generate token
+    const token = generateToken(isadminExist._id); // generate token
+    res.cookie("token", token); // pass the token as cookie
+    res.json({ success: true, message: "admin logged in" });
+  } catch (error) {
+    res.status(404).json({ message: "faild to admin login" });
+  }
 };
 // Logout admin
 const logoutAdmin = async (req, res) => {
