@@ -74,7 +74,11 @@ const adminLogin = async (req, res) => {
 // Logout admin
 const logoutAdmin = async (req, res) => {
   try {
-  } catch (error) {}
+    res.clearCookie("token");
+    res.json({ success: true, message: "admin logged out" });
+  } catch (error) {
+    res.json({ error });
+  }
 };
 // Forget password
 const forgetAdminPassword = async (req, res) => {
